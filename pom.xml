@@ -227,6 +227,19 @@
                 <artifactId>ibatis-core</artifactId>
                 <version>${ibatisVersion}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.openmrs.module</groupId>
+                <artifactId>idgen-api</artifactId>
+                <version>${idgenVersion}</version>
+                <scope>provided</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.apache.httpcomponents</groupId>
+                        <artifactId>httpclient</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
         </dependencies>
 
 
@@ -398,5 +411,6 @@
         <webservices.restModuleVersion>2.28.0</webservices.restModuleVersion>
         <lombokVersion>1.18.20</lombokVersion>
         <ibatisVersion>3.0</ibatisVersion>
+        <idgenVersion>4.5.0</idgenVersion>
     </properties>
 </project>
