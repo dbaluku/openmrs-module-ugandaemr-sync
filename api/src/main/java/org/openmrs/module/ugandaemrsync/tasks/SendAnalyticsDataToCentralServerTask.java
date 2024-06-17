@@ -113,11 +113,8 @@ public class SendAnalyticsDataToCentralServerTask extends AbstractTask {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            String dataEntryData = extractDataEntryStats(DateUtil.formatDate(startDate, "yyyy-MM-dd"),DateUtil.formatDate(endDate, "yyyy-MM-dd"));
 
-            String jsonObject = "{"+ "\"metadata\":"  +facilityMetadata+ ",\"dataentry\":" +dataEntryData+"}";
-
-            HttpResponse httpResponse = ugandaEMRHttpURLConnection.httpPost(analyticsServerUrlEndPoint, jsonObject, syncGlobalProperties.getGlobalProperty(GP_DHIS2_ORGANIZATION_UUID), syncGlobalProperties.getGlobalProperty(GP_DHIS2_ORGANIZATION_UUID));
+            HttpResponse httpResponse = ugandaEMRHttpURLConnection.httpPost(analyticsServerUrlEndPoint, facilityMetadata, syncGlobalProperties.getGlobalProperty(GP_DHIS2_ORGANIZATION_UUID), syncGlobalProperties.getGlobalProperty(GP_DHIS2_ORGANIZATION_UUID));
             if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK || httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_CREATED) {
                 log.info("Analytics data has been sent to central server");
             } else {
@@ -125,23 +122,6 @@ public class SendAnalyticsDataToCentralServerTask extends AbstractTask {
                         + httpResponse.getStatusLine().getReasonPhrase());
             }
 
-    }
-
-    private String extractDataEntryStats(String dateToday, String dateTmro) {
-        String baseurl = Context.getAdministrationService().getGlobalProperty("ugandaemrsync.api.baseurl");
-        String alternativeBaseurl = Context.getAdministrationService().getGlobalProperty("ugandaemrsync.api.baseurlAlternative");
-        String endpoint = "/openmrs/ws/rest/v1/dataentrystatistics?fromDate=" + dateToday + "&toDate=" + dateTmro + "&encUserColumn=creator&groupBy=creator";
-        String url1 = alternativeBaseurl + endpoint;
-        String url = baseurl + endpoint;
-        String response = "[]";
-        try {
-            response = getDataFromEndpoint(url,url1);
-            if (!response.isEmpty() && response.charAt(0) != '[') {
-                response = "[]";
-            }
-        } catch (Exception e) {
-        }
-        return response;
     }
 
     private String getAnalyticsDataExport() throws EvaluationException, IOException {
@@ -201,35 +181,6 @@ public class SendAnalyticsDataToCentralServerTask extends AbstractTask {
         return true;
     }
 
-    public String getDataFromEndpoint(String url,String alternativeUrl) {
-        UsernamePasswordCredentials credentials = new UsernamePasswordCredentials("admin", "Admin123");
-        try {
-            CloseableHttpClient httpClient = HttpClients.createDefault();
-            HttpGet httpGet = new HttpGet(url);
-
-            httpGet.addHeader(new BasicScheme().authenticate(credentials, httpGet, null));
-            CloseableHttpResponse response = httpClient.execute(httpGet);
-
-            if (response.getStatusLine().getStatusCode() == 200 || response.getStatusLine().getStatusCode() == 201)
-                return EntityUtils.toString(response.getEntity());
-            else if (response.getStatusLine().getStatusCode() == 404){
-                HttpGet httpGet1 = new HttpGet(alternativeUrl);
-                httpGet1.addHeader(new BasicScheme().authenticate(credentials, httpGet, null));
-                CloseableHttpResponse response1 = httpClient.execute(httpGet1);
-                if (response1.getStatusLine().getStatusCode() == 200 || response1.getStatusLine().getStatusCode() == 201){
-                    return EntityUtils.toString(response.getEntity());
-                }else{
-                    return "[]";
-                }
-            }else{
-                return "[]";
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (AuthenticationException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     private String fillTemplateWithReportData(Writer pw, String templateContents, ReportData reportData, ReportDesign reportDesign, FileOutputStream fileOutputStream) throws IOException, RenderingException {
 
